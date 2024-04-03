@@ -1,0 +1,5 @@
+= A program that hands off command line arguments
+
+This application consumes command line arguments and hands them off to a Java daemon.
+
+=== Current version: 0.1.0.

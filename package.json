@@ -1,0 +1,20 @@
+{
+  "name": "handoff",
+  "version": "0.1.0",
+  "description": "A program that consumes command line arguments and hands them off to a Java daemon",
+  "keywords": [
+    "node",
+    "cli",
+    "application"
+  ],
+  "repository": {
+    "type": "git"
+  },
+  "main": "src/index.mjs",
+  "bin": {
+    "run": "./src/index.mjs"
+  },
+  "author": "Jonathan Parker",
+  "license": "ISC",
+  "type": "module"
+}
