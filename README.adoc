@@ -2,4 +2,4 @@
 
 This application consumes command line arguments and hands them off to a Java daemon.
 
-=== Current version: 0.1.0.
+=== Current version: 0.2.0.
