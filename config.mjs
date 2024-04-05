@@ -1,11 +1,12 @@
 /**
+ * (#)config.mjs    0.2.0   04/05/2024
  * (#)config.mjs    0.1.0   04/03/2024
  *
  * Copyright (c) Jonathan M. Parker
  * All Rights Reserved.
  * 
  * @author    Jonathan Parker
- * @version   0.1.0
+ * @version   0.2.0
  * @since     0.1.0
  *
  * MIT License
@@ -35,7 +36,12 @@
  * The configuration.
  */
 const Config = {
-    debug: true
+    daemon: {
+        host: "localhost",
+        port: 8080,
+        timeout: 5000
+    },
+    debug: true,
 };
 
 export { Config }
