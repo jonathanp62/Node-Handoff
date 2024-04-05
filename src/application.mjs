@@ -174,7 +174,7 @@ class Application {
      * @returns boolean
      */
     isDaemonAlive() {
-        const url = Config.daemon.host + ':' + Config.daemon.port;
+        const url = 'http://' + Config.daemon.host + ':' + Config.daemon.port;
         const isDebug = this.debug;
 
         var result;
@@ -208,18 +208,40 @@ class Application {
 
             timeout = timeout || Config.daemon.timeout;
 
-            var socket = io(url, {reconnection: false, timeout: timeout});
+            const socket = io(url, {reconnection: true, timeout: timeout, transports: ["websocket"]});
 
-            socket.on("connect", function() {
+            // Connection handler
+
+            socket.on("connect", () => {
+                console.log(`Connected OK`);
                 clearTimeout(timer);
-                resolve();
                 socket.close();
+                resolve();
             });
+
+            // Disconnection handler
+
+            socket.on("disconnect", (reason, details) => {
+                if (timer) {
+                    clearTimeout(timer);
+
+                    timer = null;
+                }
+
+                console.log(`Disconnected OK: ${reason}`);
+            });
+
+            // Error handlers
+
+            socket.on("connect_error", error);
+            socket.on("connect_timeout", error);
+            socket.on("error", error);
 
             // Set our own timeout in case the socket ends some other way than what we are listening for
 
             var timer = setTimeout(function() {
                 timer = null;
+
                 error("Local timeout");
             }, timeout);
 
@@ -235,17 +257,11 @@ class Application {
                 if (!errorAlreadyOccurred) {
                     errorAlreadyOccurred = true;
 
+                    console.log(`Failed to connect: ${data}`);
+                    socket.close();
                     reject(data);
-                    socket.disconnect();
                 }
             }
-
-            // Error handlers
-
-            socket.on("connect_error", error);
-            socket.on("connect_timeout", error);
-            socket.on("error", error);
-            socket.on("disconnect", error);
         });
     }
 }
