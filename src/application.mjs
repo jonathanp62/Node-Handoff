@@ -35,6 +35,7 @@
 import { argv } from "node:process";
 import { Config } from "../config.mjs";
 import { io } from "socket.io-client";
+import { Subject } from 'await-notify';
 
 import pkg from '../package.json' assert {type: 'json'};
 
@@ -134,10 +135,11 @@ class Application {
      * The status option handler.
      */
     handleStatus() {
-        if (this.isDaemonAlive())
-            console.log("Daemon is running");
-        else
-            console.log(("Daemon is not running"));
+        this.isDaemonAlive();
+        // if (this.isDaemonAlive())
+        //     console.log("Daemon is running");
+        // else
+        //     console.log(("Daemon is not running"));
     }
 
     /**
@@ -169,40 +171,38 @@ class Application {
     }
 
     /**
-     * Return true if the daemon is alive.
-     *
-     * @returns boolean
+     * See if the daemon is alive.
      */
     isDaemonAlive() {
         const url = 'http://' + Config.daemon.host + ':' + Config.daemon.port;
         const isDebug = this.debug;
+        const subject = new Subject();
 
-        var result;
+        (async () => {
+            console.log(`isDaemonAlive: Attempting to connect to ${url}`);
 
-        console.log(`isDaemonAlive: Attempting to connect to ${url}`);
+            this.checkConnectionToDaemon(subject, url)
+                .then(function () {
+                    console.log("daemon is running");
+                }, function (reason) {
+                    console.log(`daemon is not running: ${reason}`);
+                });
 
-        this.checkSocketIoConnect(url)
-            .then(function () {
-                result = true;
-            }, function (reason) {
-                if (isDebug)
-                    console.log(`isDaemonAlive: ${reason}`);
-
-                result = false;
-            });
-
-        return result;
+            await subject.wait();
+        }) ();
     }
 
     /**
-     * Return a promise based on the check of the
-     * socket IO's ability to connect to the daemon.
+     * Return a promise based on the check of
+     * socket IO's ability to connect to the
+     * daemon.
      *
+     * @param subject
      * @param url
      * @param timeout
      * @returns {Promise<unknown>}
      */
-    checkSocketIoConnect(url, timeout) {
+    checkConnectionToDaemon(subject, url, timeout) {
         return new Promise(function(resolve, reject) {
             var errorAlreadyOccurred = false;
 
@@ -216,6 +216,7 @@ class Application {
                 console.log(`Connected OK`);
                 clearTimeout(timer);
                 socket.close();
+                subject.notify();
                 resolve();
             });
 
@@ -257,8 +258,8 @@ class Application {
                 if (!errorAlreadyOccurred) {
                     errorAlreadyOccurred = true;
 
-                    console.log(`Failed to connect: ${data}`);
                     socket.close();
+                    subject.notify();
                     reject(data);
                 }
             }
