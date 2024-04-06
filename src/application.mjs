@@ -60,11 +60,11 @@ class Application {
             const args = argv.slice(2); // Slice of the node program and Javascript file
 
             if (this.debug)
-                console.log(`handleCommandLineArguments: There are ${args.length} command line argument(s)`);
+                console.log(`[Application] [handleCommandLineArguments] There are ${args.length} command line argument(s)`);
 
             for (const arg of args) {
                 if (this.debug)
-                    console.log(`handleCommandLineArguments: ${arg}`)
+                    console.log(`[Application] [handleCommandLineArguments] ${arg}`)
 
                 const argAsString = arg.toString();
 
@@ -74,7 +74,7 @@ class Application {
                     if (argAsString === "--debug" || argAsString === "--no-debug") {
                         // @todo Keep going with command line arguments
 
-                        console.log(`handleCommandLineArguments: debug: ${this.debug}`);
+                        console.log(`[Application] [handleCommandLineArguments] debug: ${this.debug}`);
                     }
                 }
             }
@@ -88,7 +88,7 @@ class Application {
      */
     handleCommandLineOption(option) {
         if (this.debug)
-            console.log(`handleCommandLineOption: Handling option ${option}`);
+            console.log(`[Application] [handleCommandLineOption] Handling option ${option}`);
 
         switch(option) {
             case "--debug":
@@ -228,7 +228,7 @@ class Application {
             const isDebug = this.debug;
 
             if (isDebug)
-                console.log(`isDaemonAlive: Attempting to connect to ${url}`);
+                console.log(`[Application] [isDaemonAlive] Attempting to connect to ${url}`);
 
             this.checkConnectionToDaemon(url)
                 .then(function () {
@@ -236,7 +236,7 @@ class Application {
                     resolve(true);
                 }, function (reason) {
                     if (isDebug)
-                        console.log(`isDaemonAlive: Checking connection to daemon: ${reason}`);
+                        console.log(`[Application] [isDaemonAlive] Checking connection to daemon: ${reason}`);
 
                     subject.notify();
                     resolve(false);
@@ -267,7 +267,7 @@ class Application {
 
             socket.on("connect", () => {
                 if (isDebug)
-                    console.log("checkConnectionToDaemon: Connected OK");
+                    console.log("[Application] [checkConnectionToDaemon] Connected OK");
 
                 clearTimeout(timer);
                 socket.close();
@@ -284,7 +284,7 @@ class Application {
                 }
 
                 if (isDebug)
-                    console.log(`checkConnectionToDaemon: Disconnected OK: ${reason}`);
+                    console.log(`[Application] [checkConnectionToDaemon] Disconnected OK: ${reason}`);
             });
 
             // Error handlers
