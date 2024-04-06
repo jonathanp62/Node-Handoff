@@ -34,6 +34,7 @@
 
 import { argv } from "node:process";
 import { Config } from "../config.mjs";
+import { CommandLineArgumentsHandler} from "./command-line-arguments-handler.mjs";
 import { CommandLineOptionHandler} from "./command-line-option-handler.mjs";
 
 import pkg from '../package.json' assert {type: 'json'};
@@ -56,7 +57,8 @@ class Application {
      */
     handleCommandLineArguments() {
         if (argv.length > 2) {
-            const args = argv.slice(2); // Slice of the node program and Javascript file
+            const args = argv.slice(2);        // Slice of the node program and Javascript file
+            const argumentArray = [];   // Argument(s) beyond options
 
             if (this._debug)
                 console.log(`[Application] [handleCommandLineArguments] There are ${args.length} command line argument(s)`);
@@ -74,21 +76,33 @@ class Application {
                     this._debug = false;
 
                 if (argAsString.startsWith("--")) {
-                    this.handleCommandLineOption(argAsString);
+                    this.handleOption(argAsString);
                 } else {
-                    console.log(`argAsString: ${argAsString}`);
+                    argumentArray.push(argAsString)
                 }
             }
+
+            if (argumentArray.length > 0)
+                this.handleArguments(argumentArray);
         }
     }
 
     /**
-     * A command line option handler.
+     * Handle a command line option.
      *
      * @param option
      */
-    handleCommandLineOption(option) {
+    handleOption(option) {
         new CommandLineOptionHandler(option, pkg, this._debug).handle();
+    }
+
+    /**
+     * Handle any command line arguments beyond any options.
+     *
+     * @param argumentArray
+     */
+    handleArguments(argumentArray) {
+        new CommandLineArgumentsHandler(argumentArray, this._debug).handle();
     }
 }
 
