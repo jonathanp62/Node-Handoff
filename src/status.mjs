@@ -1,13 +1,12 @@
 /**
- * (#)config.mjs    0.2.0   04/05/2024
- * (#)config.mjs    0.1.0   04/03/2024
+ * (#)status.mjs    0.2.0   04/06/2024
  *
  * Copyright (c) Jonathan M. Parker
  * All Rights Reserved.
- * 
+ *
  * @author    Jonathan Parker
  * @version   0.2.0
- * @since     0.1.0
+ * @since     0.2.0
  *
  * MIT License
  *
@@ -32,17 +31,41 @@
  * SOFTWARE.
  */
 
-/**
- * The configuration.
- */
-const Config = {
-    daemon: {
-        host: "localhost",
-        port: 8080,
-        protocol: "http://",
-        timeout: 5000
-    },
-    debug: true,
-};
+import { CommunicationsHandler} from "./communications-handler.mjs";
+import { Subject } from 'await-notify';
 
-export { Config }
+/**
+ * The status class.
+ */
+class Status {
+    /**
+     * The constructor.
+     *
+     * @param debug
+     */
+    constructor(debug) {
+        this._debug = debug;
+    }
+
+    /**
+     * The handle method.
+     */
+    handle() {
+        const subject = new Subject();
+
+        (async () => {
+            const handler = new CommunicationsHandler(this._debug);
+
+            handler.isDaemonAlive(subject).then(isAlive => {
+                if (isAlive)
+                    console.log("Handoff daemon is running");
+                else
+                    console.log("Handoff daemon is not running");
+            });
+
+            await subject.wait();
+        }) ();
+    }
+}
+
+export { Status };

@@ -34,8 +34,7 @@
 
 import { argv } from "node:process";
 import { Config } from "../config.mjs";
-import { io } from "socket.io-client";
-import { Subject } from 'await-notify';
+import { CommandLineOptionHandler} from "./command-line-option-handler.mjs";
 
 import pkg from '../package.json' assert {type: 'json'};
 
@@ -43,7 +42,7 @@ import pkg from '../package.json' assert {type: 'json'};
  * The application class.
  */
 class Application {
-    debug = Config.debug;
+    _debug = Config.debug;
 
     /**
      * The run method.
@@ -59,23 +58,25 @@ class Application {
         if (argv.length > 2) {
             const args = argv.slice(2); // Slice of the node program and Javascript file
 
-            if (this.debug)
+            if (this._debug)
                 console.log(`[Application] [handleCommandLineArguments] There are ${args.length} command line argument(s)`);
 
             for (const arg of args) {
-                if (this.debug)
+                if (this._debug)
                     console.log(`[Application] [handleCommandLineArguments] ${arg}`)
 
                 const argAsString = arg.toString();
 
+                if (argAsString === "--debug")
+                    this._debug = true;
+
+                if (argAsString === "--no-debug")
+                    this._debug = false;
+
                 if (argAsString.startsWith("--")) {
                     this.handleCommandLineOption(argAsString);
-
-                    if (argAsString === "--debug" || argAsString === "--no-debug") {
-                        // @todo Keep going with command line arguments
-
-                        console.log(`[Application] [handleCommandLineArguments] debug: ${this.debug}`);
-                    }
+                } else {
+                    console.log(`argAsString: ${argAsString}`);
                 }
             }
         }
@@ -87,237 +88,7 @@ class Application {
      * @param option
      */
     handleCommandLineOption(option) {
-        if (this.debug)
-            console.log(`[Application] [handleCommandLineOption] Handling option ${option}`);
-
-        switch(option) {
-            case "--debug":
-                this.debug = true;
-                break;
-            case "--no-debug":
-                this.debug = false;
-                break;
-            case "--restart":
-                this.handleRestart();
-                break;
-            case "--start":
-                this.handleStart();
-                break;
-            case "--status":
-                this.handleStatus();
-                break;
-            case "--stop":
-                this.handleStop();
-                break;
-            case "--version":
-                this.handleVersion();
-                break;
-            default:
-                this.handleUnrecognized(option);
-        }
-    }
-
-    /**
-     * The restart option handler.
-     */
-    handleRestart() {
-        const subject = new Subject();
-
-        (async () => {
-            this.isDaemonAlive(subject).then(isAlive => {
-                if (isAlive)
-                    console.log("Handoff daemon can be restarted");
-                else
-                    console.log("Handoff daemon is not running");
-            });
-
-            await subject.wait();
-        }) ();
-    }
-
-    /**
-     * The start option handler.
-     */
-    handleStart() {
-        const subject = new Subject();
-
-        (async () => {
-            this.isDaemonAlive(subject).then(isAlive => {
-                if (isAlive)
-                    console.log("Handoff daemon is already running");
-                else
-                    console.log("Handoff daemon can be started");
-            });
-
-            await subject.wait();
-        }) ();
-    }
-
-    /**
-     * The status option handler.
-     */
-    handleStatus() {
-        const subject = new Subject();
-
-        (async () => {
-            this.isDaemonAlive(subject).then(isAlive => {
-                if (isAlive)
-                    console.log("Handoff daemon is running");
-                else
-                    console.log("Handoff daemon is not running");
-            });
-
-            await subject.wait();
-        }) ();
-    }
-
-    /**
-     * The stop option handler.
-     */
-    handleStop() {
-        const subject = new Subject();
-
-        (async () => {
-            this.isDaemonAlive(subject).then(isAlive => {
-                if (isAlive)
-                    console.log("Handoff daemon can be stopped");
-                else
-                    console.log("Handoff daemon is not running");
-            });
-
-            await subject.wait();
-        }) ();
-    }
-
-    /**
-     * The version option handler.
-     */
-    handleVersion() {
-        const subject = new Subject();
-        const applicationName = pkg.name[0].toUpperCase() + pkg.name.substring(1);
-
-        (async () => {
-            console.log(`${applicationName} version ${pkg.version} (${pkg.author})`)
-
-            this.isDaemonAlive(subject).then(isAlive => {
-                if (isAlive)
-                    console.log("Handoff daemon version goes here");
-            });
-
-            await subject.wait();
-        }) ();
-    }
-
-    /**
-     * The unrecognized option handler.
-     */
-    handleUnrecognized(option) {
-        console.log(`Option '${option}' is not a recognized command line option`);
-    }
-
-    /**
-     * Return a promise with a boolean type that
-     * states whether the daemon process is running.
-     *
-     * @param subject
-     * @return Promise<Boolean>
-     */
-    isDaemonAlive(subject) {
-        return new Promise(resolve => {
-            const url = 'http://' + Config.daemon.host + ':' + Config.daemon.port;
-            const isDebug = this.debug;
-
-            if (isDebug)
-                console.log(`[Application] [isDaemonAlive] Attempting to connect to ${url}`);
-
-            this.checkConnectionToDaemon(url)
-                .then(function () {
-                    subject.notify();
-                    resolve(true);
-                }, function (reason) {
-                    if (isDebug)
-                        console.log(`[Application] [isDaemonAlive] Checking connection to daemon: ${reason}`);
-
-                    subject.notify();
-                    resolve(false);
-                });
-        });
-    }
-
-    /**
-     * Return a promise based on the check of
-     * socket IO's ability to connect to the
-     * daemon.
-     *
-     * @param url
-     * @param timeout
-     * @returns {Promise<unknown>}
-     */
-    checkConnectionToDaemon(url, timeout) {
-        const isDebug = Config.debug;
-
-        return new Promise(function(resolve, reject) {
-            var errorAlreadyOccurred = false;
-
-            timeout = timeout || Config.daemon.timeout;
-
-            const socket = io(url, {reconnection: true, timeout: timeout, transports: ["websocket"]});
-
-            // Connection handler
-
-            socket.on("connect", () => {
-                if (isDebug)
-                    console.log("[Application] [checkConnectionToDaemon] Connected OK");
-
-                clearTimeout(timer);
-                socket.close();
-                resolve();
-            });
-
-            // Disconnection handler
-
-            socket.on("disconnect", (reason, details) => {
-                if (timer) {
-                    clearTimeout(timer);
-
-                    timer = null;
-                }
-
-                if (isDebug)
-                    console.log(`[Application] [checkConnectionToDaemon] Disconnected OK: ${reason}`);
-            });
-
-            // Error handlers
-
-            socket.on("connect_error", error);
-            socket.on("connect_timeout", error);
-            socket.on("error", error);
-
-            // Set our own timeout in case the socket ends some other way than what we are listening for
-
-            var timer = setTimeout(function() {
-                timer = null;
-
-                error("Local timeout");
-            }, timeout);
-
-            // Common error handler
-
-            function error(data) {
-                if (timer) {
-                    clearTimeout(timer);
-
-                    timer = null;
-                }
-
-                if (!errorAlreadyOccurred) {
-                    errorAlreadyOccurred = true;
-
-                    socket.close();
-                    reject(data);
-                }
-            }
-        });
+        new CommandLineOptionHandler(option, pkg, this._debug).handle();
     }
 }
 
