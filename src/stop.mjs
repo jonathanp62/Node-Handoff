@@ -1,11 +1,12 @@
 /**
+ * (#)stop.mjs  0.3.0   04/06/2024
  * (#)stop.mjs  0.2.0   04/06/2024
  *
  * Copyright (c) Jonathan M. Parker
  * All Rights Reserved.
  *
  * @author    Jonathan Parker
- * @version   0.2.0
+ * @version   0.3.0
  * @since     0.2.0
  *
  * MIT License
@@ -51,19 +52,28 @@ class Stop {
      * The handle method.
      */
     handle() {
-        const subject = new Subject();
+        const isAliveSubject = new Subject();
 
         (async () => {
             const handler = new CommunicationsHandler(this._debug);
 
-            handler.isDaemonAlive(subject).then(isAlive => {
-                if (isAlive)
-                    console.log("Handoff daemon can be stopped");
+            handler.isDaemonAlive(isAliveSubject).then(isAlive => {
+                if (isAlive) {
+                    const stopSubject = new Subject();
+
+                    (async () => {
+                        handler.stopDaemon(stopSubject).then(response => {
+                            console.log(response);
+                        })
+
+                        await stopSubject.wait();
+                    }) ();
+                }
                 else
                     console.log("Handoff daemon is not running");
             });
 
-            await subject.wait();
+            await isAliveSubject.wait();
         }) ();
     }
 }

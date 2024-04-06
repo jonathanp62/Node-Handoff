@@ -1,11 +1,12 @@
 /**
+ * (#)version.mjs   0.3.0   04/06/2024
  * (#)version.mjs   0.2.0   04/06/2024
  *
  * Copyright (c) Jonathan M. Parker
  * All Rights Reserved.
  *
  * @author    Jonathan Parker
- * @version   0.2.0
+ * @version   0.3.0
  * @since     0.2.0
  *
  * MIT License
@@ -54,7 +55,7 @@ class Version {
     }
 
     handle() {
-        const subject = new Subject();
+        const isAliveSubject = new Subject();
         const applicationName = this._appName[0].toUpperCase() + this._appName.substring(1);
 
         (async () => {
@@ -62,12 +63,21 @@ class Version {
 
             const handler = new CommunicationsHandler(this._debug);
 
-            handler.isDaemonAlive(subject).then(isAlive => {
-                if (isAlive)
-                    console.log("Handoff daemon version goes here");
+            handler.isDaemonAlive(isAliveSubject).then(isAlive => {
+                if (isAlive) {
+                    const stopSubject = new Subject();
+
+                    (async () => {
+                        handler.getDaemonVersion(stopSubject).then(response => {
+                            console.log(response);
+                        })
+
+                        await stopSubject.wait();
+                    }) ();
+                }
             });
 
-            await subject.wait();
+            await isAliveSubject.wait();
         }) ();
     }
 }

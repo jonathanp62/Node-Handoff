@@ -1,11 +1,12 @@
 /**
+ * (#)communications-handler.mjs    0.3.0   04/06/2024
  * (#)communications-handler.mjs    0.2.0   04/06/2024
  *
  * Copyright (c) Jonathan M. Parker
  * All Rights Reserved.
  *
  * @author    Jonathan Parker
- * @version   0.2.0
+ * @version   0.3.0
  * @since     0.2.0
  *
  * MIT License
@@ -62,7 +63,7 @@ class CommunicationsHandler {
             if (isDebug)
                 console.log(`[CommunicationsHandler] [isDaemonAlive] Attempting to connect to ${url}`);
 
-            this.checkConnectionToDaemon(url)
+            this.checkConnectionToDaemon(url, Config.daemon.timeout)
                 .then(function () {
                     subject.notify();
                     resolve(true);
@@ -73,6 +74,132 @@ class CommunicationsHandler {
                     subject.notify();
                     resolve(false);
                 });
+        });
+    }
+
+    getDaemonVersion(subject) {
+        return new Promise(resolve => {
+            const url = Config.daemon.protocol + Config.daemon.host + ':' + Config.daemon.port;
+            const isDebug = this._debug;
+
+            if (isDebug)
+                console.log(`[CommunicationsHandler] [getDaemonVersion] Attempting to connect to ${url}`);
+
+            this.sendEventToDaemon(url, "VERSION", "", Config.daemon.timeout)
+                .then(response => {
+                    subject.notify();
+                    resolve(response);
+                }, function (reason) {
+                    if (isDebug)
+                        console.log(`[CommunicationsHandler] [getDaemonVersion] Getting version from daemon: ${reason}`);
+
+                    subject.notify();
+                    resolve(reason);
+                });
+        });
+    }
+
+    stopDaemon(subject) {
+        return new Promise(resolve => {
+            const url = Config.daemon.protocol + Config.daemon.host + ':' + Config.daemon.port;
+            const isDebug = this._debug;
+
+            if (isDebug)
+                console.log(`[CommunicationsHandler] [stopDaemon] Attempting to connect to ${url}`);
+
+            this.sendEventToDaemon(url, "STOP", "", Config.daemon.timeout)
+                .then(response => {
+                    subject.notify();
+                    resolve(response);
+                }, function (reason) {
+                    if (isDebug)
+                        console.log(`[CommunicationsHandler] [stopDaemon] Stopping daemon: ${reason}`);
+
+                    subject.notify();
+                    resolve(reason);
+                });
+        });
+    }
+
+    /**
+     *
+     * Return a promise based on sending
+     * an event with data to the daemon.
+     *
+     * @param url
+     * @param event
+     * @param data
+     * @param timeout
+     * @return {Promise<unknown>}
+     */
+    sendEventToDaemon(url, event, data, timeout) {
+        const isDebug = this._debug;
+
+        return new Promise(function(resolve, reject) {
+            let errorAlreadyOccurred = false;
+
+            const socket = io(url, {reconnection: true, timeout: timeout, transports: ["websocket"]});
+
+            // Connection handler
+
+            socket.on("connect", () => {
+                if (isDebug)
+                    console.log("[CommunicationsHandler] [sendDataToDaemon] Connected OK");
+
+                clearTimeout(timer);
+                socket.emit(event, data);
+            });
+
+            // Response handler
+
+            socket.on(event, (response) => {
+                socket.close();
+                resolve(response);
+            });
+
+            // Disconnection handler
+
+            socket.on("disconnect", (reason, details) => {
+                if (timer) {
+                    clearTimeout(timer);
+
+                    timer = null;
+                }
+
+                if (isDebug)
+                    console.log(`[CommunicationsHandler] [sendDataToDaemon] Disconnected OK: ${reason}`);
+            });
+
+            // Error handlers
+
+            socket.on("connect_error", error);
+            socket.on("connect_timeout", error);
+            socket.on("error", error);
+
+            // Set our own timeout in case the socket ends some other way than what we are listening for
+
+            let timer = setTimeout(function() {
+                timer = null;
+
+                error("Local timeout");
+            }, timeout);
+
+            // Common error handler
+
+            function error(data) {
+                if (timer) {
+                    clearTimeout(timer);
+
+                    timer = null;
+                }
+
+                if (!errorAlreadyOccurred) {
+                    errorAlreadyOccurred = true;
+
+                    socket.close();
+                    reject(data);
+                }
+            }
         });
     }
 
@@ -89,9 +216,7 @@ class CommunicationsHandler {
         const isDebug = this._debug;
 
         return new Promise(function(resolve, reject) {
-            var errorAlreadyOccurred = false;
-
-            timeout = timeout || Config.daemon.timeout;
+            let errorAlreadyOccurred = false;
 
             const socket = io(url, {reconnection: true, timeout: timeout, transports: ["websocket"]});
 
@@ -127,7 +252,7 @@ class CommunicationsHandler {
 
             // Set our own timeout in case the socket ends some other way than what we are listening for
 
-            var timer = setTimeout(function() {
+            let timer = setTimeout(function() {
                 timer = null;
 
                 error("Local timeout");
