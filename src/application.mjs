@@ -121,46 +121,91 @@ class Application {
      * The restart option handler.
      */
     handleRestart() {
+        const subject = new Subject();
 
+        (async () => {
+            this.isDaemonAlive(subject).then(isAlive => {
+                if (isAlive)
+                    console.log("Handoff daemon can be restarted");
+                else
+                    console.log("Handoff daemon is not running");
+            });
+
+            await subject.wait();
+        }) ();
     }
 
     /**
      * The start option handler.
      */
     handleStart() {
+        const subject = new Subject();
 
+        (async () => {
+            this.isDaemonAlive(subject).then(isAlive => {
+                if (isAlive)
+                    console.log("Handoff daemon is already running");
+                else
+                    console.log("Handoff daemon can be started");
+            });
+
+            await subject.wait();
+        }) ();
     }
 
     /**
      * The status option handler.
      */
     handleStatus() {
-        this.isDaemonAlive();
-        // if (this.isDaemonAlive())
-        //     console.log("Daemon is running");
-        // else
-        //     console.log(("Daemon is not running"));
+        const subject = new Subject();
+
+        (async () => {
+            this.isDaemonAlive(subject).then(isAlive => {
+                if (isAlive)
+                    console.log("Handoff daemon is running");
+                else
+                    console.log("Handoff daemon is not running");
+            });
+
+            await subject.wait();
+        }) ();
     }
 
     /**
      * The stop option handler.
      */
     handleStop() {
+        const subject = new Subject();
 
+        (async () => {
+            this.isDaemonAlive(subject).then(isAlive => {
+                if (isAlive)
+                    console.log("Handoff daemon can be stopped");
+                else
+                    console.log("Handoff daemon is not running");
+            });
+
+            await subject.wait();
+        }) ();
     }
 
     /**
      * The version option handler.
      */
     handleVersion() {
+        const subject = new Subject();
         const applicationName = pkg.name[0].toUpperCase() + pkg.name.substring(1);
 
-        console.log(`${applicationName} version ${pkg.version} (${pkg.author})`)
+        (async () => {
+            console.log(`${applicationName} version ${pkg.version} (${pkg.author})`)
 
-        // @todo Check if the daemon is running and if so get its version
+            this.isDaemonAlive(subject).then(isAlive => {
+                if (isAlive)
+                    console.log("Handoff daemon version goes here");
+            });
 
-        if (this.isDaemonAlive())
-            console.log("Daemon is running");
+            await subject.wait();
+        }) ();
     }
 
     /**
@@ -171,25 +216,32 @@ class Application {
     }
 
     /**
-     * See if the daemon is alive.
+     * Return a promise with a boolean type that
+     * states whether the daemon process is running.
+     *
+     * @param subject
+     * @return Promise<Boolean>
      */
-    isDaemonAlive() {
-        const url = 'http://' + Config.daemon.host + ':' + Config.daemon.port;
-        const isDebug = this.debug;
-        const subject = new Subject();
+    isDaemonAlive(subject) {
+        return new Promise(resolve => {
+            const url = 'http://' + Config.daemon.host + ':' + Config.daemon.port;
+            const isDebug = this.debug;
 
-        (async () => {
-            console.log(`isDaemonAlive: Attempting to connect to ${url}`);
+            if (isDebug)
+                console.log(`isDaemonAlive: Attempting to connect to ${url}`);
 
-            this.checkConnectionToDaemon(subject, url)
+            this.checkConnectionToDaemon(url)
                 .then(function () {
-                    console.log("daemon is running");
+                    subject.notify();
+                    resolve(true);
                 }, function (reason) {
-                    console.log(`daemon is not running: ${reason}`);
-                });
+                    if (isDebug)
+                        console.log(`isDaemonAlive: Checking connection to daemon: ${reason}`);
 
-            await subject.wait();
-        }) ();
+                    subject.notify();
+                    resolve(false);
+                });
+        });
     }
 
     /**
@@ -197,12 +249,13 @@ class Application {
      * socket IO's ability to connect to the
      * daemon.
      *
-     * @param subject
      * @param url
      * @param timeout
      * @returns {Promise<unknown>}
      */
-    checkConnectionToDaemon(subject, url, timeout) {
+    checkConnectionToDaemon(url, timeout) {
+        const isDebug = Config.debug;
+
         return new Promise(function(resolve, reject) {
             var errorAlreadyOccurred = false;
 
@@ -213,10 +266,11 @@ class Application {
             // Connection handler
 
             socket.on("connect", () => {
-                console.log(`Connected OK`);
+                if (isDebug)
+                    console.log("checkConnectionToDaemon: Connected OK");
+
                 clearTimeout(timer);
                 socket.close();
-                subject.notify();
                 resolve();
             });
 
@@ -229,7 +283,8 @@ class Application {
                     timer = null;
                 }
 
-                console.log(`Disconnected OK: ${reason}`);
+                if (isDebug)
+                    console.log(`checkConnectionToDaemon: Disconnected OK: ${reason}`);
             });
 
             // Error handlers
@@ -259,7 +314,6 @@ class Application {
                     errorAlreadyOccurred = true;
 
                     socket.close();
-                    subject.notify();
                     reject(data);
                 }
             }
