@@ -1,11 +1,12 @@
 /**
+ * (#)start.mjs 0.3.0   04/12/2024
  * (#)start.mjs 0.2.0   04/06/2024
  *
  * Copyright (c) Jonathan M. Parker
  * All Rights Reserved.
  *
  * @author    Jonathan Parker
- * @version   0.2.0
+ * @version   0.3.0
  * @since     0.2.0
  *
  * MIT License
@@ -32,6 +33,8 @@
  */
 
 import { CommunicationsHandler} from "./communications-handler.mjs";
+import { Config } from "../config.mjs";
+import { spawn } from 'child_process';
 import { Subject } from 'await-notify';
 
 /**
@@ -59,8 +62,23 @@ class Start {
             handler.isDaemonAlive(subject).then(isAlive => {
                 if (isAlive)
                     console.log("Handoff daemon is already running");
-                else
-                    console.log("Handoff daemon can be started");
+                else {
+                    const process = spawn(Config.daemon.start,
+                        [],
+                        {
+                            detached: true,
+                            stdio: 'ignore'
+                        }
+                    );
+
+                    process.on('error', (data) => {
+                        console.log(`Failed to start Handoff daemon: ${data}`);
+                    });
+
+                    process.unref();
+
+                    console.log("Handoff daemon started");
+                }
             });
 
             await subject.wait();

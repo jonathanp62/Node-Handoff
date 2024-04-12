@@ -1,4 +1,5 @@
 /**
+ * (#)config.mjs    0.3.0   04/12/2024
  * (#)config.mjs    0.2.0   04/05/2024
  * (#)config.mjs    0.1.0   04/03/2024
  *
@@ -6,7 +7,7 @@
  * All Rights Reserved.
  * 
  * @author    Jonathan Parker
- * @version   0.2.0
+ * @version   0.3.0
  * @since     0.1.0
  *
  * MIT License
@@ -38,8 +39,9 @@
 const Config = {
     daemon: {
         host: "localhost",
-        port: 8080,
+        port: 10130,
         protocol: "http://",
+        start: "/Users/Maestro/.handoff/daemon/bin/start.sh",
         timeout: 5000
     },
     debug: true,
