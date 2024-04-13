@@ -1,4 +1,5 @@
 /**
+ * (#)stop.mjs  0.4.0   04/13/2024
  * (#)stop.mjs  0.3.0   04/06/2024
  * (#)stop.mjs  0.2.0   04/06/2024
  *
@@ -6,7 +7,7 @@
  * All Rights Reserved.
  *
  * @author    Jonathan Parker
- * @version   0.3.0
+ * @version   0.4.0
  * @since     0.2.0
  *
  * MIT License
@@ -33,6 +34,7 @@
  */
 
 import { CommunicationsHandler} from "./communications-handler.mjs";
+import { logResponseJson } from "./utils.mjs";
 import { Subject } from 'await-notify';
 
 /**
@@ -63,7 +65,12 @@ class Stop {
 
                     (async () => {
                         handler.stopDaemon(stopSubject).then(response => {
-                            console.log(response);
+                            const respObj = JSON.parse(response);
+
+                            if (this._debug)
+                                logResponseJson(respObj);
+
+                            console.log(respObj.content);
                         })
 
                         await stopSubject.wait();
