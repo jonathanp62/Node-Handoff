@@ -1,4 +1,5 @@
 /**
+ * (#)communications-handler.mjs    0.4.0   04/13/2024
  * (#)communications-handler.mjs    0.3.0   04/06/2024
  * (#)communications-handler.mjs    0.2.0   04/06/2024
  *
@@ -6,7 +7,7 @@
  * All Rights Reserved.
  *
  * @author    Jonathan Parker
- * @version   0.3.0
+ * @version   0.4.0
  * @since     0.2.0
  *
  * MIT License
@@ -34,19 +35,12 @@
 
 import { Config } from "../config.mjs";
 import { io } from "socket.io-client";
+import { SocketEvents } from "./socket-events.mjs";
 
 /**
  * The communications handler class.
  */
 class CommunicationsHandler {
-    socketEventConnect = "connect";
-    socketEventConnectError = "connect_error";
-    socketEventConnectTimeout = "connect_timeout";
-    socketEventDisconnect = "disconnect";
-    socketEventError = "error";
-    socketEventStop = "STOP";
-    socketEventVersion = "VERSION";
-
     /**
      * The constructor.
      *
@@ -93,7 +87,7 @@ class CommunicationsHandler {
             if (isDebug)
                 console.log(`[CommunicationsHandler] [getDaemonVersion] Attempting to connect to ${url}`);
 
-            this.sendEventToDaemon(url, this.socketEventVersion, "", Config.daemon.timeout)
+            this.sendEventToDaemon(url, SocketEvents.VERSION, "", Config.daemon.timeout)
                 .then(response => {
                     subject.notify();
                     resolve(response);
@@ -115,7 +109,7 @@ class CommunicationsHandler {
             if (isDebug)
                 console.log(`[CommunicationsHandler] [stopDaemon] Attempting to connect to ${url}`);
 
-            this.sendEventToDaemon(url, this.socketEventStop, "", Config.daemon.timeout)
+            this.sendEventToDaemon(url, SocketEvents.STOP, "", Config.daemon.timeout)
                 .then(response => {
                     subject.notify();
                     resolve(response);
@@ -142,11 +136,6 @@ class CommunicationsHandler {
      */
     sendEventToDaemon(url, event, data, timeout) {
         const isDebug = this._debug;
-        const connectEvent = this.socketEventConnect;
-        const connectErrorEvent = this.socketEventConnectError;
-        const connectTimeoutEvent = this.socketEventConnectTimeout;
-        const disconnectEvent = this.socketEventDisconnect;
-        const errorEvent = this.socketEventError;
 
         return new Promise(function(resolve, reject) {
             let errorAlreadyOccurred = false;
@@ -155,7 +144,7 @@ class CommunicationsHandler {
 
             // Connection handler
 
-            socket.on(connectEvent, () => {
+            socket.on(SocketEvents.CONNECT, () => {
                 if (isDebug)
                     console.log("[CommunicationsHandler] [sendDataToDaemon] Connected OK");
 
@@ -172,7 +161,7 @@ class CommunicationsHandler {
 
             // Disconnection handler
 
-            socket.on(disconnectEvent, (reason, details) => {
+            socket.on(SocketEvents.DISCONNECT, (reason, details) => {
                 if (timer) {
                     clearTimeout(timer);
 
@@ -185,9 +174,9 @@ class CommunicationsHandler {
 
             // Error handlers
 
-            socket.on(connectErrorEvent, error);
-            socket.on(connectTimeoutEvent, error);
-            socket.on(errorEvent, error);
+            socket.on(SocketEvents.CONNECT_ERROR, error);
+            socket.on(SocketEvents.CONNECT_TIMEOUT, error);
+            socket.on(SocketEvents.ERROR, error);
 
             // Set our own timeout in case the socket ends some other way than what we are listening for
 
@@ -227,11 +216,6 @@ class CommunicationsHandler {
      */
     checkConnectionToDaemon(url, timeout) {
         const isDebug = this._debug;
-        const connectEvent = this.socketEventConnect;
-        const connectErrorEvent = this.socketEventConnectError;
-        const connectTimeoutEvent = this.socketEventConnectTimeout;
-        const disconnectEvent = this.socketEventDisconnect;
-        const errorEvent = this.socketEventError;
 
         return new Promise(function(resolve, reject) {
             let errorAlreadyOccurred = false;
@@ -240,7 +224,7 @@ class CommunicationsHandler {
 
             // Connection handler
 
-            socket.on(connectEvent, () => {
+            socket.on(SocketEvents.CONNECT, () => {
                 if (isDebug)
                     console.log("[CommunicationsHandler] [checkConnectionToDaemon] Connected OK");
 
@@ -251,7 +235,7 @@ class CommunicationsHandler {
 
             // Disconnection handler
 
-            socket.on(disconnectEvent, (reason, details) => {
+            socket.on(SocketEvents.DISCONNECT, (reason, details) => {
                 if (timer) {
                     clearTimeout(timer);
 
@@ -264,9 +248,9 @@ class CommunicationsHandler {
 
             // Error handlers
 
-            socket.on(connectErrorEvent, error);
-            socket.on(connectTimeoutEvent, error);
-            socket.on(errorEvent, error);
+            socket.on(SocketEvents.CONNECT_ERROR, error);
+            socket.on(SocketEvents.CONNECT_TIMEOUT, error);
+            socket.on(SocketEvents.ERROR, error);
 
             // Set our own timeout in case the socket ends some other way than what we are listening for
 
