@@ -70,7 +70,10 @@ class Stop {
                             if (this._debug)
                                 logResponseJson(respObj);
 
-                            console.log(respObj.content);
+                            if (respObj.code === "OK")
+                                console.log(respObj.content);
+                            else
+                                console.log(`'${respObj.code}' returned from server`);
                         })
 
                         await stopSubject.wait();

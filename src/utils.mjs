@@ -34,8 +34,10 @@
 export const logResponseJson = (responseJson) => {
     console.log(`type      : ${responseJson.type}`)
     console.log(`id        : ${responseJson.id}`)
+    console.log(`request id: ${responseJson.requestId}`)
     console.log(`session id: ${responseJson.sessionId}`)
     console.log(`date-time : ${responseJson.dateTime}`)
     console.log(`event     : ${responseJson.event}`)
+    console.log(`code      : ${responseJson.code}`)
     console.log(`content   : ${responseJson.content}`)
 }
