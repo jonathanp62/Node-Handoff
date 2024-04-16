@@ -79,6 +79,12 @@ class CommunicationsHandler {
         });
     }
 
+    /**
+     * Get the version of the daemon.
+     *
+     * @param   subject
+     * @return  {Promise<unknown>}
+     */
     getDaemonVersion(subject) {
         return new Promise(resolve => {
             const url = Config.daemon.protocol + Config.daemon.host + ':' + Config.daemon.port;
@@ -101,6 +107,12 @@ class CommunicationsHandler {
         });
     }
 
+    /**
+     * Stop the daemon.
+     *
+     * @param   subject
+     * @return  {Promise<unknown>}
+     */
     stopDaemon(subject) {
         return new Promise(resolve => {
             const url = Config.daemon.protocol + Config.daemon.host + ':' + Config.daemon.port;
@@ -124,85 +136,17 @@ class CommunicationsHandler {
     }
 
     /**
-     *
      * Return a promise based on sending
      * an event with data to the daemon.
      *
-     * @param url
-     * @param event
-     * @param data
-     * @param timeout
-     * @return {Promise<unknown>}
+     * @param   url
+     * @param   event
+     * @param   data
+     * @param   timeout
+     * @return  {Promise<unknown>}
      */
     sendEventToDaemon(url, event, data, timeout) {
-        const isDebug = this._debug;
-
-        return new Promise(function(resolve, reject) {
-            let errorAlreadyOccurred = false;
-
-            const socket = io(url, {reconnection: true, timeout: timeout, transports: ["websocket"]});
-
-            // Connection handler
-
-            socket.on(SocketEvents.CONNECT, () => {
-                if (isDebug)
-                    console.log("[CommunicationsHandler] [sendDataToDaemon] Connected OK");
-
-                clearTimeout(timer);
-                socket.emit(event, data);
-            });
-
-            // Response handler
-
-            socket.on(event, (response) => {
-                socket.close();
-                resolve(response);
-            });
-
-            // Disconnection handler
-
-            socket.on(SocketEvents.DISCONNECT, (reason, details) => {
-                if (timer) {
-                    clearTimeout(timer);
-
-                    timer = null;
-                }
-
-                if (isDebug)
-                    console.log(`[CommunicationsHandler] [sendDataToDaemon] Disconnected OK: ${reason}`);
-            });
-
-            // Error handlers
-
-            socket.on(SocketEvents.CONNECT_ERROR, error);
-            socket.on(SocketEvents.CONNECT_TIMEOUT, error);
-            socket.on(SocketEvents.ERROR, error);
-
-            // Set our own timeout in case the socket ends some other way than what we are listening for
-
-            let timer = setTimeout(function() {
-                timer = null;
-
-                error("Local timeout");
-            }, timeout);
-
-            // Common error handler
-
-            function error(data) {
-                if (timer) {
-                    clearTimeout(timer);
-
-                    timer = null;
-                }
-
-                if (!errorAlreadyOccurred) {
-                    errorAlreadyOccurred = true;
-
-                    socket.close();
-                    reject(data);
-                }
-            }
-        });
+        return this.communicate(url, event, data, timeout, this._debug);
     }
 
     /**
@@ -210,13 +154,26 @@ class CommunicationsHandler {
      * socket IO's ability to connect to the
      * daemon.
      *
-     * @param url
-     * @param timeout
+     * @param   url
+     * @param   timeout
      * @returns {Promise<unknown>}
      */
     checkConnectionToDaemon(url, timeout) {
-        const isDebug = this._debug;
+        return this.communicate(url, null, null, timeout, this._debug);
+    }
 
+    /**
+     * Return a promise based on sending
+     * an event with data to the daemon.
+     *
+     * @param   url
+     * @param   event
+     * @param   data
+     * @param   timeout
+     * @param   debug
+     * @return  {Promise<unknown>}
+     */
+    communicate(url, event, data, timeout, debug) {
         return new Promise(function(resolve, reject) {
             let errorAlreadyOccurred = false;
 
@@ -225,13 +182,27 @@ class CommunicationsHandler {
             // Connection handler
 
             socket.on(SocketEvents.CONNECT, () => {
-                if (isDebug)
-                    console.log("[CommunicationsHandler] [checkConnectionToDaemon] Connected OK");
+                if (debug)
+                    console.log("[CommunicationsHandler] [communicate] Connected OK");
 
                 clearTimeout(timer);
-                socket.close();
-                resolve();
+
+                if (event == null) {
+                    socket.close();
+                    resolve();
+                } else {
+                    socket.emit(event, data);
+                }
             });
+
+            // Response handler for non-connection events
+
+            if (event != null) {
+                socket.on(event, (response) => {
+                    socket.close();
+                    resolve(response);
+                });
+            }
 
             // Disconnection handler
 
@@ -242,8 +213,12 @@ class CommunicationsHandler {
                     timer = null;
                 }
 
-                if (isDebug)
-                    console.log(`[CommunicationsHandler] [checkConnectionToDaemon] Disconnected OK: ${reason}`);
+                if (debug) {
+                    if (details !== undefined)
+                        console.log(`[CommunicationsHandler] [communicate] Disconnected OK: ${reason}: ${details}`);
+                    else
+                        console.log(`[CommunicationsHandler] [communicate] Disconnected OK: ${reason}`);
+                }
             });
 
             // Error handlers
