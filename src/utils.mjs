@@ -31,6 +31,29 @@
  * SOFTWARE.
  */
 
+export function createRequest(event, content) {
+    if (content !== undefined) {
+        const data = {
+            type: 'Request',
+            id: crypto.randomUUID(),
+            dateTime: new Date().toISOString(),
+            event: event
+        };
+
+        return JSON.stringify(data);
+    } else {
+        const data = {
+            type: 'Request',
+            id: crypto.randomUUID(),
+            dateTime: new Date().toISOString(),
+            event: event,
+            content: content
+        };
+
+        return JSON.stringify(data);
+    }
+}
+
 export const logResponseJson = (responseJson) => {
     console.log(`type      : ${responseJson.type}`)
     console.log(`id        : ${responseJson.id}`)

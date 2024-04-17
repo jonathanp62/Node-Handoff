@@ -34,6 +34,7 @@
  */
 
 import { Config } from "../config.mjs";
+import { createRequest } from "./utils.mjs";
 import { io } from "socket.io-client";
 import { SocketEvents } from "./socket-events.mjs";
 
@@ -93,7 +94,7 @@ class CommunicationsHandler {
             if (isDebug)
                 console.log(`[CommunicationsHandler] [getDaemonVersion] Attempting to connect to ${url}`);
 
-            this.sendEventToDaemon(url, SocketEvents.VERSION, "", Config.daemon.timeout)
+            this.sendEventToDaemon(url, SocketEvents.VERSION, createRequest(SocketEvents.VERSION), Config.daemon.timeout)
                 .then(response => {
                     subject.notify();
                     resolve(response);
@@ -121,7 +122,7 @@ class CommunicationsHandler {
             if (isDebug)
                 console.log(`[CommunicationsHandler] [stopDaemon] Attempting to connect to ${url}`);
 
-            this.sendEventToDaemon(url, SocketEvents.STOP, "", Config.daemon.timeout)
+            this.sendEventToDaemon(url, SocketEvents.STOP, createRequest(SocketEvents.STOP), Config.daemon.timeout)
                 .then(response => {
                     subject.notify();
                     resolve(response);

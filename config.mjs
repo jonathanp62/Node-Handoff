@@ -44,7 +44,7 @@ const Config = {
         start: "/Users/Maestro/.handoff/daemon/bin/start.sh",
         timeout: 5000
     },
-    debug: true,
+    debug: false,
 };
 
 export { Config }
