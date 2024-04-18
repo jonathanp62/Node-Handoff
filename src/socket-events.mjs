@@ -1,11 +1,12 @@
 /**
+ * (#)SocketEvents.mjs  0.5.0   04/18/2024
  * (#)SocketEvents.mjs  0.4.0   04/13/2024
  *
  * Copyright (c) Jonathan M. Parker
  * All Rights Reserved.
  *
  * @author    Jonathan Parker
- * @version   0.4.0
+ * @version   0.5.0
  * @since     0.4.0
  *
  * MIT License
@@ -36,6 +37,7 @@ const SocketEvents = {
     CONNECT_ERROR: 'connect_error',
     CONNECT_TIMEOUT: 'connect_timeout',
     DISCONNECT: 'disconnect',
+    ECHO: 'ECHO',
     ERROR: 'error',
     STOP: 'STOP',
     VERSION: 'VERSION',

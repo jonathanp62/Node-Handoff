@@ -1,13 +1,12 @@
 /**
- * (#)command-line-arguments-handler.mjs    0.5.0   04/18/2024
- * (#)command-line-arguments-handler.mjs    0.2.0   04/06/2024
+ * (#)echo.mjs  0.5.0   04/18/2024
  *
  * Copyright (c) Jonathan M. Parker
  * All Rights Reserved.
  *
  * @author    Jonathan Parker
  * @version   0.5.0
- * @since     0.2.0
+ * @since     0.5.0
  *
  * MIT License
  *
@@ -32,49 +31,56 @@
  * SOFTWARE.
  */
 
-import { Echo } from "./echo.mjs";
+import { CommunicationsHandler} from "./communications-handler.mjs";
+import { logResponseJson } from "./utils.mjs";
+import { Subject } from 'await-notify';
 
 /**
- * The command line arguments handler class.
+ * The echo class.
  */
-class CommandLineArgumentsHandler {
+class Echo {
     /**
      * The constructor.
      *
-     * @param argumentArray
+     * @param args
      * @param debug
      */
-    constructor(argumentArray, debug) {
-        this._argumentArray = argumentArray;
+    constructor(args, debug) {
+        this._args = args;
         this._debug = debug;
     }
 
-    /**
-     * The handle method.
-     */
     handle() {
-        for (const argument of this._argumentArray) {
-            if (this._debug)
-                console.log(`[CommandLineArgumentsHandler] [handle] Handling argument ${argument}`)
+        const isAliveSubject = new Subject();
 
-            if (argument === 'echo') {
-                const args = this._argumentArray.slice(1);  // Slice of the echo argument
+        (async () => {
+            const handler = new CommunicationsHandler(this._debug);
 
-                this.handleEcho(args);
+            handler.isDaemonAlive(isAliveSubject).then(isAlive => {
+                if (isAlive) {
+                    const echoSubject = new Subject();
 
-                break;
-            }
-        }
-    }
+                    (async () => {
+                        handler.echo(echoSubject, this._args).then(response => {
+                            const respObj = JSON.parse(response);
 
-    /**
-     * The handle echo method.
-     *
-     * @param args
-     */
-    handleEcho(args) {
-        new Echo(args, this._debug).handle();
+                            if (this._debug)
+                                logResponseJson(respObj);
+
+                            if (respObj.code === "OK")
+                                console.log(respObj.content);
+                            else
+                                console.log(`'${respObj.code}' returned from server`);
+                        })
+
+                        await echoSubject.wait();
+                    }) ();
+                }
+            });
+
+            await isAliveSubject.wait();
+        }) ();
     }
 }
 
-export { CommandLineArgumentsHandler };
+export { Echo };

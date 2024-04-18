@@ -1,4 +1,5 @@
 /**
+ * (#)communications-handler.mjs    0.5.0   04/18/2024
  * (#)communications-handler.mjs    0.4.0   04/13/2024
  * (#)communications-handler.mjs    0.3.0   04/06/2024
  * (#)communications-handler.mjs    0.2.0   04/06/2024
@@ -7,7 +8,7 @@
  * All Rights Reserved.
  *
  * @author    Jonathan Parker
- * @version   0.4.0
+ * @version   0.5.0
  * @since     0.2.0
  *
  * MIT License
@@ -101,6 +102,43 @@ class CommunicationsHandler {
                 }, function (reason) {
                     if (isDebug)
                         console.log(`[CommunicationsHandler] [getDaemonVersion] Getting version from daemon: ${reason}`);
+
+                    subject.notify();
+                    resolve(reason);
+                });
+        });
+    }
+
+    /**
+     * Echo the request content back to the client.
+     *
+     * @param   subject
+     * @param   args
+     * @return  {Promise<unknown>}
+     */
+    echo(subject, args) {
+        return new Promise(resolve => {
+            const url = Config.daemon.protocol + Config.daemon.host + ':' + Config.daemon.port;
+            const isDebug = this._debug;
+
+            let content = '';
+
+            for (const arg of args) {
+                content += arg + ' '
+            }
+
+            if (isDebug) {
+                console.log(`[CommunicationsHandler] [echo] Attempting to connect to ${url}`);
+                console.log(`[CommunicationsHandler] [echo] Content: ${content}`);
+            }
+
+            this.sendEventToDaemon(url, SocketEvents.ECHO, createRequest(SocketEvents.ECHO, content.trim()), Config.daemon.timeout)
+                .then(response => {
+                    subject.notify();
+                    resolve(response);
+                }, function (reason) {
+                    if (isDebug)
+                        console.log(`[CommunicationsHandler] [echo] Echoing request content: ${reason}`);
 
                     subject.notify();
                     resolve(reason);

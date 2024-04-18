@@ -1,11 +1,12 @@
 /**
+ * (#)utils.mjs 0.5.0   04/18/2024
  * (#)utils.mjs 0.4.0   04/13/2024
  *
  * Copyright (c) Jonathan M. Parker
  * All Rights Reserved.
  *
  * @author    Jonathan Parker
- * @version   0.4.0
+ * @version   0.5.0
  * @since     0.4.0
  *
  * MIT License
@@ -32,7 +33,7 @@
  */
 
 export function createRequest(event, content) {
-    if (content !== undefined) {
+    if (content === undefined) {
         const data = {
             type: 'Request',
             id: crypto.randomUUID(),
