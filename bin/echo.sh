@@ -7,7 +7,7 @@
 # @since        0.5.0
 #
 # Usage:
-#       echo.sh
+#       echo.sh <arguments...>
 #
 # MIT License
 #
@@ -35,7 +35,7 @@ APP_HOME=${HOME}/Node-Projects/Handoff
 
 if cd ${APP_HOME}
 then
-    node . echo Jonathan M. Parker
+    node --no-warnings . echo $@
 else
     echo "Unable to change to ${APP_HOME}"
 fi

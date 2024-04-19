@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
+# @(#)status.sh	0.5.0	04/19/2024
 # @(#)status.sh	0.4.0	04/12/2024
 #
 # @author       Jonathan Parker
-# @version      0.4.0
+# @version      0.5.0
 # @since        0.4.0
 #
 # Usage:
@@ -35,7 +36,7 @@ APP_HOME=${HOME}/Node-Projects/Handoff
 
 if cd ${APP_HOME}
 then
-    node . --status
+    node --no-warnings . --status
 else
     echo "Unable to change to ${APP_HOME}"
 fi
