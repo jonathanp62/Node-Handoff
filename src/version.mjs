@@ -1,4 +1,5 @@
 /**
+ * (#)version.mjs   0.6.0   04/19/2024
  * (#)version.mjs   0.4.0   04/13/2024
  * (#)version.mjs   0.3.0   04/06/2024
  * (#)version.mjs   0.2.0   04/06/2024
@@ -7,7 +8,7 @@
  * All Rights Reserved.
  *
  * @author    Jonathan Parker
- * @version   0.4.0
+ * @version   0.6.0
  * @since     0.2.0
  *
  * MIT License
@@ -70,7 +71,7 @@ class Version {
                     const stopSubject = new Subject();
 
                     (async () => {
-                        handler.getDaemonVersion(stopSubject).then(response => {
+                        handler.version(stopSubject).then(response => {
                             const respObj = JSON.parse(response);
 
                             if (this._debug)

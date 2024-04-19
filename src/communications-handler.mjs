@@ -1,4 +1,5 @@
 /**
+ * (#)communications-handler.mjs    0.6.0   04/19/2024
  * (#)communications-handler.mjs    0.5.0   04/18/2024
  * (#)communications-handler.mjs    0.4.0   04/13/2024
  * (#)communications-handler.mjs    0.3.0   04/06/2024
@@ -8,7 +9,7 @@
  * All Rights Reserved.
  *
  * @author    Jonathan Parker
- * @version   0.5.0
+ * @version   0.6.0
  * @since     0.2.0
  *
  * MIT License
@@ -87,7 +88,7 @@ class CommunicationsHandler {
      * @param   subject
      * @return  {Promise<unknown>}
      */
-    getDaemonVersion(subject) {
+    version(subject) {
         return new Promise(resolve => {
             const url = Config.daemon.protocol + Config.daemon.host + ':' + Config.daemon.port;
             const isDebug = this._debug;
@@ -152,7 +153,7 @@ class CommunicationsHandler {
      * @param   subject
      * @return  {Promise<unknown>}
      */
-    stopDaemon(subject) {
+    stop(subject) {
         return new Promise(resolve => {
             const url = Config.daemon.protocol + Config.daemon.host + ':' + Config.daemon.port;
             const isDebug = this._debug;
