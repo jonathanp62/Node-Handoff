@@ -68,7 +68,7 @@ class CommunicationsHandler {
             if (isDebug)
                 console.log(`[CommunicationsHandler] [isDaemonAlive] Attempting to connect to ${url}`);
 
-            this.checkConnectionToDaemon(url, Config.daemon.timeout)
+            this.checkConnectionToDaemon(url, Config.daemon.connectionTimeoutInSeconds)
                 .then(function () {
                     subject.notify();
                     resolve(true);
@@ -96,7 +96,7 @@ class CommunicationsHandler {
             if (isDebug)
                 console.log(`[CommunicationsHandler] [getDaemonVersion] Attempting to connect to ${url}`);
 
-            this.sendEventToDaemon(url, SocketEvents.VERSION, createRequest(SocketEvents.VERSION), Config.daemon.timeout)
+            this.sendEventToDaemon(url, SocketEvents.VERSION, createRequest(SocketEvents.VERSION), Config.daemon.connectionTimeoutInSeconds)
                 .then(response => {
                     subject.notify();
                     resolve(response);
@@ -133,7 +133,7 @@ class CommunicationsHandler {
                 console.log(`[CommunicationsHandler] [echo] Content: ${content}`);
             }
 
-            this.sendEventToDaemon(url, SocketEvents.ECHO, createRequest(SocketEvents.ECHO, content.trim()), Config.daemon.timeout)
+            this.sendEventToDaemon(url, SocketEvents.ECHO, createRequest(SocketEvents.ECHO, content.trim()), Config.daemon.connectionTimeoutInSeconds)
                 .then(response => {
                     subject.notify();
                     resolve(response);
@@ -161,7 +161,7 @@ class CommunicationsHandler {
             if (isDebug)
                 console.log(`[CommunicationsHandler] [stopDaemon] Attempting to connect to ${url}`);
 
-            this.sendEventToDaemon(url, SocketEvents.STOP, createRequest(SocketEvents.STOP), Config.daemon.timeout)
+            this.sendEventToDaemon(url, SocketEvents.STOP, createRequest(SocketEvents.STOP), Config.daemon.connectionTimeoutInSeconds)
                 .then(response => {
                     subject.notify();
                     resolve(response);
@@ -217,7 +217,7 @@ class CommunicationsHandler {
         return new Promise(function(resolve, reject) {
             let errorAlreadyOccurred = false;
 
-            const socket = io(url, {reconnection: true, timeout: timeout, transports: ["websocket"]});
+            const socket = io(url, {reconnection: true, timeout: timeout * 1000, transports: ["websocket"]});
 
             // Connection handler
 
@@ -273,7 +273,7 @@ class CommunicationsHandler {
                 timer = null;
 
                 error("Local timeout");
-            }, timeout);
+            }, timeout * 1000);
 
             // Common error handler
 
