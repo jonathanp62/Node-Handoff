@@ -78,7 +78,7 @@ class Version {
                                 logResponseJson(respObj);
 
                             if (respObj.code === "OK")
-                                console.log(respObj.content);
+                                console.log(`${respObj.content.name}: ${respObj.content.version}`);
                             else
                                 console.log(`'${respObj.code}' returned from server`);
                         })

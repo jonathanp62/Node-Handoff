@@ -1,4 +1,5 @@
 /**
+ * (#)utils.mjs 0.6.0   04/20/2024
  * (#)utils.mjs 0.5.0   04/18/2024
  * (#)utils.mjs 0.4.0   04/13/2024
  *
@@ -6,7 +7,7 @@
  * All Rights Reserved.
  *
  * @author    Jonathan Parker
- * @version   0.5.0
+ * @version   0.6.0
  * @since     0.4.0
  *
  * MIT License
@@ -65,5 +66,20 @@ export const logResponseJson = (responseJson) => {
     console.log(`date-time : ${responseJson.dateTime} (${localDateTime})`)
     console.log(`event     : ${responseJson.event}`)
     console.log(`code      : ${responseJson.code}`)
-    console.log(`content   : ${responseJson.content}`)
+
+    switch (responseJson.content.type) {
+        case 'Echo':
+            console.log(`message   : ${responseJson.content.message}`)
+            break;
+        case 'Stop':
+            console.log(`message   : ${responseJson.content.message}`)
+            console.log(`pid       : ${responseJson.content.pid}`)
+            break;
+        case 'Version':
+            console.log(`name      : ${responseJson.content.name}`)
+            console.log(`version   : ${responseJson.content.version}`)
+            break;
+        default:
+            console.log(`content   : ${JSON.stringify(responseJson.content)}`)
+    }
 }

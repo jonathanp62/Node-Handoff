@@ -1,11 +1,12 @@
 /**
+ * (#)echo.mjs  0.6.0   04/20/2024
  * (#)echo.mjs  0.5.0   04/18/2024
  *
  * Copyright (c) Jonathan M. Parker
  * All Rights Reserved.
  *
  * @author    Jonathan Parker
- * @version   0.5.0
+ * @version   0.6.0
  * @since     0.5.0
  *
  * MIT License
@@ -68,7 +69,7 @@ class Echo {
                                 logResponseJson(respObj);
 
                             if (respObj.code === "OK")
-                                console.log(respObj.content);
+                                console.log(respObj.content.message);
                             else
                                 console.log(`'${respObj.code}' returned from server`);
                         })

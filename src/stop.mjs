@@ -72,7 +72,7 @@ class Stop {
                                 logResponseJson(respObj);
 
                             if (respObj.code === "OK")
-                                console.log(respObj.content);
+                                console.log(`${respObj.content.message}: ${respObj.content.pid}`);
                             else
                                 console.log(`'${respObj.code}' returned from server`);
                         })
