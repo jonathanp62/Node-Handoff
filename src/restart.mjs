@@ -103,15 +103,6 @@ class Restart {
                     start();
                 };
 
-                // function checkFlag() {
-                //     if(flag === false) {
-                //         window.setTimeout(checkFlag, 100); /* this checks the flag every 100 milliseconds*/
-                //     } else {
-                //         /* do something*/
-                //     }
-                // }
-                // checkFlag();
-
                 setTimeout(timeoutHandler, timeout * 1000);
             })
 
