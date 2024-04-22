@@ -39,11 +39,11 @@
  */
 const Config = {
     daemon: {
+        checkPid: "/Users/Maestro/.handoff/client/bin/check-pid.sh",
         connectionTimeoutInSeconds: 5,
         host: "localhost",
         port: 10130,
         protocol: "http://",
-        restartTimeoutInSeconds: 7,
         start: "/Users/Maestro/.handoff/daemon/bin/start.sh",
     },
     debug: false,

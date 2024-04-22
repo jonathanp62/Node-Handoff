@@ -86,29 +86,76 @@ class Restart {
                     logResponseJson(respObj);
 
                 if (respObj.code === "OK")
-                    console.log(respObj.content);
+                    console.log(`${respObj.content.message}: ${respObj.content.pid}`);
                 else
                     console.log(`'${respObj.code}' returned from server`);
 
-                const timeout = Config.daemon.restartTimeoutInSeconds;
-                const debug = this._debug;
-
-                if (debug)
-                    console.log(`[Restart] [stop] Pausing ${timeout} seconds`);
-
-                const timeoutHandler = function () {
-                    if (debug)
-                        console.log("[Restart] [stop] Restarting daemon...");
-
-                    start();
-                };
-
-                setTimeout(timeoutHandler, timeout * 1000);
-            })
+                checkForDaemonProcessAndStart(respObj.content.pid, this._debug);
+            });
 
             await stopSubject.wait();
         }) ();
     }
+}
+
+/**
+ * This functions checks for and wait for the daemon process
+ * to terminate in the OS and then starts it up again.
+ *
+ * @param   pid
+ */
+function checkForDaemonProcessAndStart(pid, debug) {
+    spawnCheckPidProcess(new Subject(), pid, debug).then(isOK => {
+        if (isOK) {
+            if (debug) {
+                console.log('[Restart] [checkForDaemonProcess] Done waiting on old daemon');
+                console.log('[Restart] [checkForDaemonProcess] Restarting new daemon...');
+            }
+
+            start();
+        } else {
+            if (debug)
+                console.log('[Restart] [checkForDaemonProcess] Waiting on daemon...');
+
+            setTimeout(function () {
+                checkForDaemonProcessAndStart(pid, debug);
+            }, 300); /* Reruns this method every 300 milliseconds */
+        }
+    });
+}
+
+/**
+ * The function that spawns the check daemon PID and returns a promise.
+ *
+ * @param   subject
+ * @param   pid
+ * @param   debug
+ * @return  {Promise<unknown>}
+ */
+function spawnCheckPidProcess (subject, pid, debug) {
+    return new Promise(resolve => {
+        const checkPid = spawn(Config.daemon.checkPid, [pid]);
+
+        checkPid.stdout.on('data', (data) => {
+            console.log(`Script check-pid.sh stdout:\n${data}`);
+        });
+
+        checkPid.stderr.on("data", (data) => {
+            console.log(`Script check-pid.sh stderr: ${data}`);
+        });
+
+        checkPid.on('exit', code => {
+            if (debug)
+                console.log(`[Restart] [checkForDaemonProcess] Script check-pid.sh process ended with ${code}`);
+
+            subject.notify();
+
+            if (code === 0)
+                resolve(true);
+            else
+                resolve(false);
+        });
+    });
 }
 
 /**

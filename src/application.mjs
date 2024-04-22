@@ -39,9 +39,6 @@ import { CommandLineOptionHandler} from "./command-line-option-handler.mjs";
 
 import pkg from '../package.json' assert {type: 'json'};
 
-import { spawn } from 'child_process';
-import { Subject } from 'await-notify';
-
 /**
  * The application class.
  */
@@ -53,49 +50,6 @@ class Application {
      */
     run() {
         this.handleCommandLineArguments();
-
-        const myfunc = this.spawnProcess;
-        const subject = new Subject();
-        let counter = 1;
-
-        function checkForDaemonProcess() {
-            myfunc(subject, counter).then(isOK => {
-                if (isOK) {
-                    console.log('Done waiting; now the start could take place');
-                } else {
-                    counter = counter - 1;
-                    console.log('Waiting...');
-                    setTimeout(checkForDaemonProcess, 1000); /* this checks the flag every 100 milliseconds*/
-                }
-            });
-        }
-
-        checkForDaemonProcess();
-    }
-
-    spawnProcess(subject, counter) {
-        return new Promise(resolve => {
-            const checkPid = spawn('/Users/Maestro/.handoff/client/bin/check-pid.sh', ['99999']);
-
-            checkPid.stdout.on('data', (data) => {
-                console.log(`check-pid.sh stdout:\n${data}`);
-            });
-
-            checkPid.stderr.on("data", (data) => {
-                console.log(`check-pid.sh stderr: ${data}`);
-            });
-
-            checkPid.on('exit', code => {
-                console.log(`check-pid.sh process ended with ${code}`);
-
-                subject.notify();
-
-                if (code === 0 && counter === 0)
-                    resolve(true);
-                else
-                    resolve(false);
-            });
-        })
     }
 
     /**
