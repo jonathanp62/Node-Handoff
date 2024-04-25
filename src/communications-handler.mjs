@@ -217,7 +217,7 @@ class CommunicationsHandler {
         return new Promise(function(resolve, reject) {
             let errorAlreadyOccurred = false;
 
-            const socket = io(url, {reconnection: true, timeout: timeout * 1000, transports: ["websocket"]});
+            const socket = io(url, {forceNew: false, reconnection: true, timeout: timeout * 1000, transports: ["websocket"]});
 
             // Connection handler
 
