@@ -1,4 +1,5 @@
 /**
+ * (#)application.mjs   0.7.0   05/07/2024
  * (#)application.mjs   0.2.0   04/05/2024
  * (#)application.mjs   0.1.0   04/03/2024
  *
@@ -6,7 +7,7 @@
  * All Rights Reserved.
  * 
  * @author    Jonathan Parker
- * @version   0.2.0
+ * @version   0.7.0
  * @since     0.1.0
  *
  * MIT License
@@ -37,7 +38,7 @@ import { Config } from "../config.mjs";
 import { CommandLineArgumentsHandler} from "./command-line-arguments-handler.mjs";
 import { CommandLineOptionHandler} from "./command-line-option-handler.mjs";
 
-import pkg from '../package.json' assert {type: 'json'};
+import pkg from '../package.json' with {type: 'json'};
 
 /**
  * The application class.
