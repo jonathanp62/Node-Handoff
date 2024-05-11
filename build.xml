@@ -12,6 +12,7 @@
 				<exclude name=".git" />
 				<exclude name=".gitignore" />
 				<exclude name=".idea" />
+				<exclude name="build.xml" />
 			</fileset>
          </copy>
 	</target>
