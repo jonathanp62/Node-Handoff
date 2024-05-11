@@ -1,0 +1,22 @@
+<project name="Handoff" default="info" basedir=".">
+	<description>
+		A program that consumes command line arguments and hands them off to a Java daemon
+	</description>
+
+	<property name="destination" location="/usr/local/handoff" />
+
+	<target name="deploy">
+		<copy todir="${destination}">
+			<fileset dir="${basedir}">
+				<exclude name=".DS_Store" />
+				<exclude name=".git" />
+				<exclude name=".gitignore" />
+				<exclude name=".idea" />
+			</fileset>
+         </copy>
+	</target>
+
+	<target name="info">
+		<echo message="Run 'ant deploy' to deploy the Node.js application" />
+	</target>
+</project>
